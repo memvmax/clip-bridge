@@ -1,0 +1,12 @@
+# 依赖
+node_modules/
+
+# 本地数据 / 日志
+*.log
+.clipbridge/
+store.json
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
