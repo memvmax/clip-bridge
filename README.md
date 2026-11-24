@@ -2,6 +2,17 @@
 
 在 A 电脑复制，B 电脑（或手机）立刻看到、直接粘贴。一个 HTML 页面 + 一个零依赖 Node 服务，不需要登录、不需要翻墙、不需要数据库。
 
+![node](https://img.shields.io/badge/node-%E2%89%A516-3c873a?style=flat-square&logo=node.js&logoColor=white)
+![deps](https://img.shields.io/badge/dependencies-0-blue?style=flat-square)
+![size](https://img.shields.io/badge/single--file-98_KB-8b5cf6?style=flat-square)
+![license](https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey?style=flat-square)
+
+### 👉 [点这里直接使用](https://clip-bridge-59130.app.workbuddy.host/?sharecode=U24362SXMK)
+
+打开就是你的专属房间，地址栏会自动换成你的房间码；把那条链接丢到手机或另一台电脑，两边的剪贴板就通了。不用装任何东西，也不用注册。
+
+> 链接里的 `sharecode` 是这台部署的访问凭据（不是房间码）。第一次打开后浏览器会记住它，之后直接访问 `https://clip-bridge-59130.app.workbuddy.host/` 就能进。
+
 > Designed & built by [**memvmax**](https://github.com/memvmax) · © 2026 ClipBridge · 保留所有权利
 
 ---
