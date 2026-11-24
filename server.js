@@ -155,12 +155,17 @@ function getRoom(code, create) {
 const DEV_NAME_MAX = 24;
 const MAX_DEVICES_PER_ROOM = 40;
 const ROLES = ['admin', 'upload'];   // admin 可管理；upload 只能上传
-const DEFAULT_ROLE = 'admin';
+const DEFAULT_ROLE = 'admin';        // 只在「房间里一个管理员都没有」时兜底
 
 // 老数据没有 devices / pin / dev / note 字段，读的时候补齐，不落盘也可用
 function ensureShape(room) {
   if (!room) return room;
   if (!room.devices || typeof room.devices !== 'object') room.devices = {};
+  // 老数据里的设备没有 role 字段：那时候所有人都算管理，按原样补齐，不能把人降级
+  for (const id in room.devices) {
+    const d = room.devices[id];
+    if (d && ROLES.indexOf(d.role) < 0) d.role = DEFAULT_ROLE;
+  }
   if (!Array.isArray(room.items)) room.items = [];
   if (typeof room.notesRev !== 'number') room.notesRev = 0;
   for (const it of room.items) {
@@ -180,16 +185,28 @@ function cleanName(v) {
   return String(v || '').replace(/[\r\n\t]/g, ' ').replace(/ +/g, ' ').trim().slice(0, DEV_NAME_MAX);
 }
 
+// 房间里还有没有管理员
+function hasAdmin(room) {
+  if (!room || !room.devices) return false;
+  for (const k in room.devices) {
+    if (room.devices[k] && room.devices[k].role === 'admin') return true;
+  }
+  return false;
+}
+
 function registerDevice(room, dev, name) {
   const id = devKey(dev);
   if (!id) return null;
   const now = Date.now();
   let d = room.devices[id];
   if (!d) {
+    // 第一台设备 = 房主（管理）；之后加入的一律先是「仅上传」，
+    // 要管理权限得由现有管理设备在设置里授给 —— 除非这房间压根没有管理员（老数据 / 管理员被清空），
+    // 那就把新人提上来，免得房间变成没人管得动的死屋。
     d = room.devices[id] = {
       id,
       name: cleanName(name) || '未知设备',
-      role: DEFAULT_ROLE,
+      role: hasAdmin(room) ? 'upload' : 'admin',
       joined: now,
       seen: now,
     };
@@ -216,10 +233,10 @@ function pruneDevices(room) {
 
 function roleOf(room, dev) {
   const id = devKey(dev);
-  // 没带设备标识（老客户端 / 老标签页）按管理权限放行，避免直接把人锁在外面
-  if (!id) return DEFAULT_ROLE;
-  const d = room && room.devices ? room.devices[id] : null;
-  return d ? d.role : DEFAULT_ROLE;
+  const d = room && room.devices && id ? room.devices[id] : null;
+  if (d) return d.role;
+  // 没登记过 / 没带设备标识：房间里有管理员就只当游客，别让「不报身份」绕过权限
+  return hasAdmin(room) ? 'upload' : DEFAULT_ROLE;
 }
 
 function canManage(room, dev) {
@@ -305,7 +322,7 @@ async function handleApi(req, res, pathname, query) {
       return json(res, 200, {
         ok: true, room: code, seq: 0, items: [], ids: [], pinIds: [],
         notes: {}, notesRev: 0,
-        devices: {}, me: DEFAULT_ROLE, exists: false, now: Date.now(),
+        devices: {}, me: 'upload', exists: false, now: Date.now(),
       });
     }
 

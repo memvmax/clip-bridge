@@ -1261,6 +1261,7 @@
   var devName = '';          // 显示名，服务端为准
   var devices = Object.create(null);   // id -> {id,name,role,joined,seen}
   var myRole = 'admin';      // admin | upload
+  var guestTold = false;     // 本次进入房间有没有提示过「仅上传」
   var editingDev = '';       // 正在改名的设备 id，避免轮询把它刷掉
   var themeMode = 'auto';
 
@@ -1853,6 +1854,11 @@
     myRole = next;
     renderDevices();
     renderList();
+    // 第二台及以后进来的设备默认是游客，第一次收到这个身份时给个交代
+    if (next === 'upload' && !guestTold) {
+      guestTold = true;
+      toast('已加入这个房间，当前是「仅上传」权限');
+    }
     return true;
   }
 
@@ -2013,8 +2019,8 @@
     }
 
     el.roleHint.textContent = canManage()
-      ? '管理设备可以删除、置顶、清空，并调整其他设备的权限。为了避免把自己锁在外面，不能修改自己的权限。'
-      : '这台设备是「仅上传」：只能发送内容。删除、置顶、清空需要在管理设备上操作。';
+      ? '新加入的设备默认是「仅上传」，你可以在下面把它提成管理。管理设备能删除、置顶、清空；为了避免把自己锁在外面，不能修改自己的权限。'
+      : '这台设备是「仅上传」：只能发送内容。删除、置顶、清空需要由房间的管理设备来操作，或请它把你的权限改成「管理」。';
 
     el.clear.classList.toggle('hidden', !canManage());
   }
@@ -2268,6 +2274,7 @@
     editingNote = 0;
     devices = Object.create(null);
     myRole = 'admin';
+    guestTold = false;
     editingDev = '';
     lastId = 0;
     searchQuery = '';
